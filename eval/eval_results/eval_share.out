@@ -1,0 +1,36 @@
+Gym_010_lunge1_batch00: MRPE=0.1706, V2V=0.1852
+Gym_010_lunge1_batch01: MRPE=0.1925, V2V=0.2107
+Gym_010_lunge1_batch02: MRPE=0.1573, V2V=0.1796
+Gym_010_mountainclimber2_batch00: MRPE=0.1109, V2V=0.1257
+Gym_010_mountainclimber2_batch01: MRPE=0.1396, V2V=0.1663
+Gym_010_mountainclimber2_batch02: MRPE=0.1311, V2V=0.1728
+Gym_010_mountainclimber2_batch03: MRPE=0.1406, V2V=0.1774
+Gym_011_dips3_batch00: MRPE=0.1137, V2V=0.1294
+Gym_011_dips3_batch01: MRPE=0.2159, V2V=0.2216
+Gym_011_dips3_batch02: MRPE=0.3019, V2V=0.2629
+Gym_012_lunge2_batch00: MRPE=0.3554, V2V=0.3564
+Gym_012_lunge2_batch01: MRPE=0.3479, V2V=0.3539
+Gym_013_burpee4_batch00: MRPE=0.5741, V2V=0.5707
+Gym_013_burpee4_batch02: MRPE=0.6451, V2V=0.6532
+LectureHall_021_plankjack1_batch00: MRPE=1.1536, V2V=1.1651
+LectureHall_021_plankjack1_batch01: MRPE=1.1936, V2V=1.1742
+LectureHall_021_plankjack1_batch02: MRPE=1.1469, V2V=1.1305
+LectureHall_021_plankjack1_batch03: MRPE=1.2674, V2V=1.2771
+LectureHall_021_plankjack1_batch04: MRPE=1.1296, V2V=1.1264
+ParkingLot2_009_impro1_batch00: MRPE=0.2370, V2V=0.2955
+ParkingLot2_009_impro1_batch01: MRPE=0.1990, V2V=0.2764
+ParkingLot2_009_impro1_batch03: MRPE=0.2046, V2V=0.2563
+ParkingLot2_009_impro1_batch05: MRPE=0.4506, V2V=0.4648
+ParkingLot2_009_impro1_batch06: MRPE=0.3048, V2V=0.3225
+ParkingLot2_009_impro1_batch07: MRPE=0.3131, V2V=0.3613
+ParkingLot2_017_overfence2_batch00: MRPE=0.1382, V2V=0.2170
+ParkingLot2_017_overfence2_batch01: MRPE=0.4198, V2V=0.4306
+ParkingLot2_017_overfence2_batch02: MRPE=0.2290, V2V=0.2632
+ParkingLot2_017_overfence2_batch03: MRPE=0.5134, V2V=0.5501
+ParkingLot2_017_overfence2_batch04: MRPE=0.5317, V2V=0.5269
+ParkingLot2_017_overfence2_batch05: MRPE=0.3645, V2V=0.3614
+ParkingLot2_017_overfence2_batch06: MRPE=0.5053, V2V=0.5089
+ParkingLot2_017_overfence2_batch07: MRPE=0.5435, V2V=0.5799
+
+Average Mean Root Position Error (MRPE): 0.4376
+Average Vertex-to-Vertex Error (V2V): 0.4562
