@@ -128,7 +128,7 @@ def main(folder, frame_1, frame_2):
     d1 = depth1[common_background_mask]
     d2 = depth2[common_background_mask]
     scale2 = np.mean(d1) / np.mean(d2)
-
+    
     pc1_background = project_to_3d(depth1, common_background_mask, fov1)
     pc2_background = project_to_3d(depth2, common_background_mask, fov2, scale2)
     pc_background_mean = (pc1_background + pc2_background) / 2
@@ -144,26 +144,8 @@ def main(folder, frame_1, frame_2):
     colors_scene = np.concatenate([background_colors, pc1_human_colors, pc2_human_colors], axis=0)
     save_ply(os.path.join(folder, 'share_scene.ply'), pc_scene.cpu().numpy(), colors_scene)
 
-    # pc1_full = project_to_3d(depth1, mask_cleaned1, fov1)
-    # pc2_full = project_to_3d(depth2, mask_cleaned2, fov2, scale2)
-    # pc1_full_colors = image1[mask_cleaned1].reshape(-1, 3)
-    # pc2_full_colors = image2[mask_cleaned2].reshape(-1, 3)
-    # save_ply(os.path.join(folder, 'share_scene1.ply'), pc1_full.cpu().numpy(), pc1_full_colors)
-    # save_ply(os.path.join(folder, 'share_scene2.ply'), pc2_full.cpu().numpy(), pc2_full_colors)
-
-    # pc_green_human1 = project_to_3d(depth1, human_mask1 & mask_cleaned1, fov1)
-    # pc_green_human2 = project_to_3d(depth2, human_mask2 & mask_cleaned2, fov2, scale2)
-    # pc_green_human1_colors = np.tile([0, 255, 0], (pc_green_human1.shape[0], 1))
-    # pc_green_human2_colors = np.tile([0, 255, 0], (pc_green_human2.shape[0], 1))
-    # save_ply(os.path.join(folder, 'green_human1.ply'), pc_green_human1.cpu().numpy(), pc_green_human1_colors)
-    # save_ply(os.path.join(folder, 'green_human2.ply'), pc_green_human2.cpu().numpy(), pc_green_human2_colors)
-
     pred_rotmat, mean_shape, pred_trans = load_smpl_param(folder)
     refined_trans = torch.nn.Parameter(pred_trans.clone().detach())
-
-    init_pred_j3d, init_pred_vert = create_smpl_body(pred_rotmat, mean_shape, pred_trans)
-    np.save(os.path.join(folder, 'init_share_vertices.npy'), init_pred_vert.detach().cpu().numpy())
-    np.save(os.path.join(folder, 'init_share_joints.npy'), init_pred_j3d.detach().cpu().numpy())
 
     init_root_trans = create_smpl_body(pred_rotmat, mean_shape, pred_trans, smooth_traj=True)[0][:, 0, :]
     init_rel_root_trans1 = init_root_trans - init_root_trans[frame_1]
@@ -206,16 +188,36 @@ def main(folder, frame_1, frame_2):
             print(f"Iteration {it}, Loss: {loss.item():.3f}, Keyframe Loss: {keyframe_loss.item():.3f}, Relative Root Trans Loss: {rel_root_trans_loss.item():.3f}")
     
     print("Optimization finished.")
-
+    
+    # Save pred_verts.npy and pred_j3d.npy directly in the subfolder
     pred_j3d, pred_vert = create_smpl_body(pred_rotmat, mean_shape, refined_trans)
     np.save(os.path.join(folder, 'share_vertices.npy'), pred_vert.detach().cpu().numpy())
     np.save(os.path.join(folder, 'share_joints.npy'), pred_j3d.detach().cpu().numpy())
 
 if __name__ == "__main__":
     import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("folder", type=str, help="Folder")
-    parser.add_argument("frame_1", type=int, help="First frame folder")
-    parser.add_argument("frame_2", type=int, help="Second frame folder")
-    args = parser.parse_args()
-    main(args.folder, args.frame_1, args.frame_2)
+    TRAM_RESULTS = "eval/Toyota/share"
+    FRAME_1 = 0
+
+    subfolders = [d for d in os.listdir(TRAM_RESULTS) if os.path.isdir(os.path.join(TRAM_RESULTS, d))]
+    for sub in sorted(subfolders):
+        folder = os.path.join(TRAM_RESULTS, sub)
+        
+        # Get the last image name (without extension) in the images directory
+        images_dir = os.path.join(folder, "images")
+        if not os.path.exists(images_dir) or not os.path.isdir(images_dir):
+            print(f"Images directory not found for {sub}, skipping...")
+            continue
+        
+        image_files = sorted([f for f in os.listdir(images_dir) if f.endswith(('.jpg', '.png'))])
+        if not image_files:
+            print(f"No images found in {images_dir}, skipping...")
+            continue
+        
+        FRAME_2 = int(os.path.splitext(image_files[-1])[0])  # Extract the frame number from the last image
+        try:
+            print(f"Optimizing {sub} with FRAME_1={FRAME_1} and FRAME_2={FRAME_2}...")
+            main(folder, FRAME_1, FRAME_2)
+            print(f"{sub} done.")
+        except Exception as e:
+            print(f"Skipping {sub}: {e}")

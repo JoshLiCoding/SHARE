@@ -128,6 +128,21 @@ def main(folder, frame_1, frame_2):
     d1 = depth1[common_background_mask]
     d2 = depth2[common_background_mask]
     scale2 = np.mean(d1) / np.mean(d2)
+    
+    pc1_background = project_to_3d(depth1, common_background_mask, fov1)
+    pc2_background = project_to_3d(depth2, common_background_mask, fov2, scale2)
+    pc_background_mean = (pc1_background + pc2_background) / 2
+    background_colors = image1[common_background_mask].reshape(-1, 3)
+
+    # Take human mask from the other point cloud
+    pc1_human = project_to_3d(depth2, human_mask1 & mask_cleaned2, fov2, scale2)
+    pc2_human = project_to_3d(depth1, human_mask2 & mask_cleaned1, fov1)
+    pc1_human_colors = image2[human_mask1 & mask_cleaned2].reshape(-1, 3)
+    pc2_human_colors = image1[human_mask2 & mask_cleaned1].reshape(-1, 3)
+    
+    pc_scene = torch.cat([pc_background_mean, pc1_human, pc2_human], dim=0)
+    colors_scene = np.concatenate([background_colors, pc1_human_colors, pc2_human_colors], axis=0)
+    save_ply(os.path.join(folder, 'share_scene.ply'), pc_scene.cpu().numpy(), colors_scene)
 
     pred_rotmat, mean_shape, pred_trans = load_smpl_param(folder)
     refined_trans = torch.nn.Parameter(pred_trans.clone().detach())
@@ -174,21 +189,6 @@ def main(folder, frame_1, frame_2):
     
     print("Optimization finished.")
     
-    pc1_background = project_to_3d(depth1, common_background_mask, fov1)
-    pc2_background = project_to_3d(depth2, common_background_mask, fov2, scale2)
-    pc_background_mean = (pc1_background + pc2_background) / 2
-    background_colors = image1[common_background_mask].reshape(-1, 3)
-
-    # Take human mask from the other point cloud
-    pc1_human = project_to_3d(depth2, human_mask1 & mask_cleaned2, fov2, scale2)
-    pc2_human = project_to_3d(depth1, human_mask2 & mask_cleaned1, fov1)
-    pc1_human_colors = image2[human_mask1 & mask_cleaned2].reshape(-1, 3)
-    pc2_human_colors = image1[human_mask2 & mask_cleaned1].reshape(-1, 3)
-    
-    pc_scene = torch.cat([pc_background_mean, pc1_human, pc2_human], dim=0)
-    colors_scene = np.concatenate([background_colors, pc1_human_colors, pc2_human_colors], axis=0)
-    save_ply(os.path.join(folder, 'share_scene.ply'), pc_scene.cpu().numpy(), colors_scene)
-
     # Save pred_verts.npy and pred_j3d.npy directly in the subfolder
     pred_j3d, pred_vert = create_smpl_body(pred_rotmat, mean_shape, refined_trans)
     np.save(os.path.join(folder, 'share_vertices.npy'), pred_vert.detach().cpu().numpy())

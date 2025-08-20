@@ -3,17 +3,6 @@ import numpy as np
 import argparse
 import xml.etree.ElementTree as ET
 
-def mean_root_position_error(joints1, joints2):
-    # Root is usually joint 0
-    root1 = joints1[:, 0, :]  # shape: (T, 3)
-    root2 = joints2[:, 0, :]
-    error = np.linalg.norm(root1 - root2, axis=1)  # shape: (T,)
-    return np.mean(error)
-
-def vertex_to_vertex_error(verts1, verts2):
-    error = np.linalg.norm(verts1 - verts2, axis=2)  # shape: (T, V)
-    return np.mean(error)
-
 def load_cam_number_from_name(name):
     import re
     m = re.search(r'_cam(\d+)_', name)
@@ -62,8 +51,9 @@ def main():
         print("Warning: Not all subfolders match between the two folders after removing _camx_.")
         print(f"GT subfolders: {len(subfolders_gt)}, Pred subfolders: {len(subfolders_pred)}")
 
-    mrpe_list = []
-    v2v_list = []
+    # Collect errors for all frames across all sequences
+    all_mrpe_errors = []
+    all_v2v_errors = []
 
     for sub in common_subfolders:
         path_gt = os.path.join(args.gt_folder, sub)
@@ -102,17 +92,29 @@ def main():
         joints_pred_world = inverse_transform(joints_pred, R, t)
         verts_pred_world = inverse_transform(verts_pred, R, t)
 
-        mrpe = mean_root_position_error(joints_gt, joints_pred_world)
-        v2v = vertex_to_vertex_error(verts_gt, verts_pred_world)
-        mrpe_list.append(mrpe)
-        v2v_list.append(v2v)
+        # Calculate errors for all frames in the sequence
+        frame_mrpe = np.linalg.norm(joints_gt[:, 0, :] - joints_pred_world[:, 0, :], axis=1)  # MRPE per frame
+        frame_v2v = np.linalg.norm(verts_gt - verts_pred_world, axis=2).mean(axis=1)  # V2V per frame
+
+        # Append frame-level errors to the global list
+        all_mrpe_errors.extend(frame_mrpe)
+        all_v2v_errors.extend(frame_v2v)
+
+        # Sequence-level averages (for logging)
+        mrpe = np.mean(frame_mrpe)
+        v2v = np.mean(frame_v2v)
         print(f"{sub}: MRPE={mrpe:.4f}, V2V={v2v:.4f}")
 
-    avg_mrpe = np.mean(mrpe_list) if mrpe_list else float('nan')
-    avg_v2v = np.mean(v2v_list) if v2v_list else float('nan')
+    # Calculate global statistics across all frames
+    avg_mrpe = np.mean(all_mrpe_errors) if all_mrpe_errors else float('nan')
+    std_mrpe = np.std(all_mrpe_errors, ddof=1) if all_mrpe_errors else float('nan')  # Standard deviation for MRPE
+    avg_v2v = np.mean(all_v2v_errors) if all_v2v_errors else float('nan')
+    std_v2v = np.std(all_v2v_errors, ddof=1) if all_v2v_errors else float('nan')  # Standard deviation for V2V
 
-    print(f"\nAverage Mean Root Position Error (MRPE): {avg_mrpe:.4f}")
-    print(f"Average Vertex-to-Vertex Error (V2V): {avg_v2v:.4f}")
+    print(f"\nAverage Mean Root Position Error (MRPE): {avg_mrpe:.2f}")
+    print(f"Standard Deviation of MRPE: {std_mrpe:.2f}")
+    print(f"Average Vertex-to-Vertex Error (V2V): {avg_v2v:.2f}")
+    print(f"Standard Deviation of V2V: {std_v2v:.2f}")
 
 if __name__ == "__main__":
     main()

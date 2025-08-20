@@ -194,22 +194,22 @@ def main():
         #         name=f"mhmocap_bones_{i}"
         #     )
         # Also visualize and transform mhm_scene.ply
-        # mhm_scene_path = os.path.join(frames_dir, 'mhm_scene.ply')
-        # mhm_scene_pc = trimesh.load(mhm_scene_path)
-        # if len(mhm_scene_pc.vertices) > subset_size:
-        #     idx = random.sample(range(len(mhm_scene_pc.vertices)), subset_size)
-        #     mhm_scene_pc.vertices = mhm_scene_pc.vertices[idx]
-        #     mhm_scene_pc.visual.vertex_colors = mhm_scene_pc.visual.vertex_colors[idx]
-        # mhm_scene_pc.vertices = mhm_scene_pc.vertices @ T_opengl_to_opencv.T
-        # mhm_scene_pc.vertices = inverse_transform(mhm_scene_pc.vertices)
-        # mhm_scene_pc.vertices = mhm_scene_pc.vertices @ T_opencv_to_viser.T
-        # # Visualize
-        # server.add_point_cloud(
-        #     points=mhm_scene_pc.vertices,
-        #     colors=mhm_scene_pc.visual.vertex_colors[:, :3],
-        #     point_size=0.01,
-        #     name="mhm_scene"
-        # )
+        mhm_scene_path = os.path.join(frames_dir, 'mhm_scene.ply')
+        mhm_scene_pc = trimesh.load(mhm_scene_path)
+        if len(mhm_scene_pc.vertices) > subset_size:
+            idx = random.sample(range(len(mhm_scene_pc.vertices)), subset_size)
+            mhm_scene_pc.vertices = mhm_scene_pc.vertices[idx]
+            mhm_scene_pc.visual.vertex_colors = mhm_scene_pc.visual.vertex_colors[idx]
+        mhm_scene_pc.vertices = mhm_scene_pc.vertices @ T_opengl_to_opencv.T
+        mhm_scene_pc.vertices = inverse_transform(mhm_scene_pc.vertices)
+        mhm_scene_pc.vertices = mhm_scene_pc.vertices @ T_opencv_to_viser.T
+        # Visualize
+        server.add_point_cloud(
+            points=mhm_scene_pc.vertices,
+            colors=mhm_scene_pc.visual.vertex_colors[:, :3],
+            point_size=0.01,
+            name="mhm_scene"
+        )
     if use_bev:
         frames_root = os.path.join('eval/RICH/bev_results')
         frames_dir = os.path.join(frames_root, f"{base}_cam{cam_num}_batch{batch}")
@@ -335,21 +335,19 @@ def main():
         #     )   
         share_scene_path = os.path.join(frame_dir, 'share_scene.ply')
         share_scene_pc = trimesh.load(share_scene_path)
-        # if len(share_scene_pc.vertices) > subset_size:
-        #     idx = random.sample(range(len(share_scene_pc.vertices)), subset_size)
-        #     share_scene_pc.vertices = share_scene_pc.vertices[idx]
-        #     share_scene_pc.visual.vertex_colors = share_scene_pc.visual.vertex_colors[idx]
+        if len(share_scene_pc.vertices) > subset_size:
+            idx = random.sample(range(len(share_scene_pc.vertices)), subset_size)
+            share_scene_pc.vertices = share_scene_pc.vertices[idx]
+            share_scene_pc.visual.vertex_colors = share_scene_pc.visual.vertex_colors[idx]
         share_scene_pc.vertices = inverse_transform(share_scene_pc.vertices)
         share_scene_pc.vertices = share_scene_pc.vertices @ T_opencv_to_viser.T
         # Visualize
-        # server.add_point_cloud(
-        #     points=share_scene_pc.vertices,
-        #     colors=share_scene_pc.visual.vertex_colors[:, :3],
-        #     point_size=0.001,
-        #     name="share_scene"
-        # )
-    # print(np.mean(np.linalg.norm(joints[:, 0]-bev_joints[:, 0], axis=1)))
-    # print(np.mean(np.linalg.norm(verts-share_verts, axis=2)))
+        server.add_point_cloud(
+            points=share_scene_pc.vertices,
+            colors=share_scene_pc.visual.vertex_colors[:, :3],
+            point_size=0.001,
+            name="share_scene"
+        )
     while True:
         time.sleep(1)
 
